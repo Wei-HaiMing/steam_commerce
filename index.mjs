@@ -95,10 +95,13 @@ app.post("/signup", async (req, res) => { // signup post route
     res.redirect("/home"); // redirect to home after signup
   } catch (error) {
     console.error("Error during signup:", error.sqlMessage.slice(-15, -1));
-    if(error.sqlMessage.slice(-15, -1).) {
+    if(error.sqlMessage.slice(-15, -1).includes("user.username")) {
       res.status(400).send("Username already exists. Please choose another one.");
+    } else if(error.sqlMessage.slice(-15, -1).includes("user.email")) {
+      res.status(400).send("Email already exists. Please choose another one.");
+    } else {
+      res.status(500).send("An error occurred during signup.");
     }
-    res.status(500).send("An error occurred during signup.");
   }
 });
 
