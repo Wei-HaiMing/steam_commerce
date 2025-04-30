@@ -1,5 +1,5 @@
 import express from "express";
-// import mysql from "mysql2/promise";
+import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
 import seedrandom from "seedrandom";
@@ -13,16 +13,16 @@ app.use(express.static("public"));
 //for Express to get values using POST method
 app.use(express.urlencoded({ extended: true }));
 
-//setting up database connection pool
-// const pool = mysql.createPool({
-//   host: process.env.DB_HOST,
-//   user: process.env.DB_USER,
-//   password: process.env.DB_PASSWORD,
-//   database: process.env.DB_NAME,
-//   connectionLimit: 10,
-//   waitForConnections: true,
-// });
-// const conn = await pool.getConnection();
+// setting up database connection pool
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  connectionLimit: 10,
+  waitForConnections: true,
+});
+const conn = await pool.getConnection();
 
 //routes
 app.get("/", async (_, res) => {
@@ -68,6 +68,37 @@ app.get("/", async (_, res) => {
   } catch (error) {
     console.error("Error fetching app list:", error);
     res.status(500).send("An error occurred while fetching app data.");
+  }
+});
+
+app.get("/home", (req, res) => { // home route
+  res.render("home");
+});
+
+app.get("/lists", (req, res) => { // lists route
+  res.render("lists");
+}); 
+
+app.get("/signup", (req, res) => { // signup route
+  res.render("signup");
+});
+
+app.post("/signup", async (req, res) => { // signup post route
+  try{
+    let username = req.body.username;
+    let password = req.body.password;
+    let email = req.body.email;
+    let sql = `INSERT INTO user (username, password, email) VALUES (?, ?, ?)`;
+    let sqlParams = [username, password, email];
+    await conn.query(sql, sqlParams);
+
+    res.redirect("/home"); // redirect to home after signup
+  } catch (error) {
+    console.error("Error during signup:", error.sqlMessage.slice(-15, -1));
+    if(error.sqlMessage.slice(-15, -1).) {
+      res.status(400).send("Username already exists. Please choose another one.");
+    }
+    res.status(500).send("An error occurred during signup.");
   }
 });
 
