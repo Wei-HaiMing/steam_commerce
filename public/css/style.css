@@ -1,0 +1,19 @@
+body{
+    background-color: bisque;
+}
+.img-hover-zoom {
+    overflow: hidden;
+    /* optional: set a fixed height/width here if you want a crop effect */
+  }
+
+  /* smooth transition */
+  .img-hover-zoom img {
+    transition: transform 0.5s ease;
+    /* ensure it starts at normal scale */
+    transform: scale(1);
+  }
+
+  /* scale it up on hover */
+  .img-hover-zoom:hover img {
+    transform: scale(1.1); /* increase as desired */
+  }
