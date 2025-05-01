@@ -13,6 +13,7 @@ app.use(express.static("public"));
 //for Express to get values using POST method
 app.use(express.urlencoded({ extended: true }));
 
+
 //setting up database connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -85,6 +86,40 @@ app.get("/api/getLists/:userId", async (req, res) => {
 });
 
 
+
+app.get("/home", (req, res) => { // home route
+  res.render("home");
+});
+
+app.get("/lists", (req, res) => { // lists route
+  res.render("lists");
+}); 
+
+app.get("/signup", (req, res) => { // signup route
+  res.render("signup");
+});
+
+app.post("/signup", async (req, res) => { // signup post route
+  try{
+    let username = req.body.username;
+    let password = req.body.password;
+    let email = req.body.email;
+    let sql = `INSERT INTO user (username, password, email) VALUES (?, ?, ?)`;
+    let sqlParams = [username, password, email];
+    await conn.query(sql, sqlParams);
+
+    res.redirect("/home"); // redirect to home after signup
+  } catch (error) {
+    console.error("Error during signup:", error.sqlMessage.slice(-15, -1));
+    if(error.sqlMessage.slice(-15, -1).includes("user.username")) {
+      res.render("signup", { error: "Username already exists. Please choose another one." });
+    } else if(error.sqlMessage.slice(-15, -1).includes("user.email")) {
+      res.render("signup", { error: "Email already exists. Please choose another one." });
+    } else {
+      res.status(500).send("An error occurred during signup.");
+    }
+  }
+}); 
 
 app.listen(3000, () => {
   console.log("Express server running");
