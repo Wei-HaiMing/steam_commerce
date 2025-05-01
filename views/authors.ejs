@@ -10,8 +10,9 @@
 <body>
     <%- include('partials/nav.ejs') %>
 
+    <h1 class="mb-4">Authors</h1>
     <div class="container mt-4">
-        <h1 class="mb-4">Authors</h1>
+       
 
         <div class="row">
             <% for (let author of rows) { %>
@@ -22,7 +23,7 @@
                             <h5 class="card-title"><%= author.firstName %> <%= author.lastName %></h5>
                             <p class="card-text">Profession: <%= author.prof %></p>
                             <p class="card-text">Country: <%= author.country %></p>
-                            <a href="/editAuthor?authorId=<%= author.authorId %>" class="btn btn-warning">Update</a>
+                            <a href="/editAuthor?authorId=<%= author.authorId %>" userId="<%= rows.userId %>" class="btn btn-warning">Update</a>
                             <a href="/deleteAuthor?authorId=<%= author.authorId %>" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this author?')">Delete</a>
                         </div>
                     </div>
@@ -30,6 +31,65 @@
             <% } %>
         </div>
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="modalTaskTitle">Modal title</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                <div id="modalTaskInfo">
+                    <!-- <h2 id="authorName"></h2> -->
+                    <form action="/updateTask?_method=PUT" method="POST">
+                        <!-- <input type="hidden" name="_method" value="PUT"> -->
+                        
+
+                        <label for="listSelect">Select List:</label>
+                        <select name="selectList" id="listSelect" >
+
+
+
+                           
+
+
+                        </select>
+
+                        <button id="realUpdateBtn">Add To List</button>
+                    </form>
+                </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let updateBtn = document.querySelector("#updateBtn");
+        updateBtn.addEventListener("click", displayUpdateTaskInfo);
+
+        async function displayUpdateTaskInfo(){
+            let userId = this.getAttribute("userId");
+            let url = "/api/getLists/" + taskId;
+            let response = await fetch(url);
+            let data = await response.json();
+            let option;
+            for(let i = 0; i < data.length; i++){
+                option = `<option value="${data[i].listId}">${data[i].listName}</option>`;
+                document.querySelector("#listSelect").innerHTML += option;
+            }
+            
+            
+            const myModal = new bootstrap.Modal(document.getElementById('taskModal'));
+            myModal.show();
+        }
+    </script>
+
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
