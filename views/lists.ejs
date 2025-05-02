@@ -11,23 +11,17 @@
     <%- include('partials/nav.ejs') %>
 
     <div class="container mt-4">
-        <h1 class="mb-4">Authors</h1>
-
-        <div class="row">
-            <% for (let author of rows) { %>
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <img src="<%= author.pic %>" class="card-img-top" alt="<%= author.firstName %> <%= author.lastName %>">
-                        <div class="card-body">
-                            <h5 class="card-title"><%= author.firstName %> <%= author.lastName %></h5>
-                            <p class="card-text">Profession: <%= author.prof %></p>
-                            <p class="card-text">Country: <%= author.country %></p>
-                            <a href="/editAuthor?authorId=<%= author.authorId %>" class="btn btn-warning">Update</a>
-                            <a href="/deleteAuthor?authorId=<%= author.authorId %>" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this author?')">Delete</a>
-                        </div>
-                    </div>
+        <h1 class="mb-4 text-center"><%= user.username %>'s WishList</h1>
+        <div class="col-md-4 mb-4 w-50 h-100 text-center mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><%= wishlist[0].name %></h5>
+                    <form action="/editWishlist">
+                        <input type="hidden" name="username" value="<%= user.username %>">
+                        <button class="btn btn-warning">Edit List</button>
+                    </form>
                 </div>
-            <% } %>
+            </div>
         </div>
     </div>
 

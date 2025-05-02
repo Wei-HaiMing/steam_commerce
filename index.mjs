@@ -3,6 +3,7 @@ import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
 import seedrandom from "seedrandom";
+import session from "express-session"
 
 const app = express();
 dotenv.config();
@@ -12,6 +13,15 @@ app.use(express.static("public"));
 
 //for Express to get values using POST method
 app.use(express.urlencoded({ extended: true }));
+
+app.set("trust proxy", 1);
+app.use(
+  session({
+    secret: process.env.PROXY_SECRET,
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
 // setting up database connection pool
 const pool = mysql.createPool({
@@ -75,9 +85,72 @@ app.get("/home", (req, res) => { // home route
   res.render("home");
 });
 
-app.get("/lists", (req, res) => { // lists route
-  res.render("lists");
+app.get("/lists", async (req, res) => { // lists route
+  let userID = 2;
+  // let sql = `SELECT * FROM user LEFT JOIN ON userID = wishlist.userID LEFT JOIN ON wishlist.wishlistID WHERE userID = ?;`;
+  let sql = `SELECT 
+              u.userID,
+              u.username,
+              u.email,
+              w.wishlistID,
+              w.name AS name
+              FROM \`user\` AS u
+              LEFT JOIN wishlist AS w
+              ON u.userID = w.userID
+              WHERE u.userID = ?`;
+  let sqlParams = [userID];
+  const [rows] = await conn.query(sql, sqlParams);
+
+  const user = rows.length
+    ? { userID: rows[0].userID, username: rows[0].username, email: rows[0].email }
+    : { };
+
+  // collect only the non-null wishlists
+  const wishlist = rows
+    .filter(r => r.wishlistID != null)
+    .map(r => ({ id: r.wishlistID, name: r.name }));
+
+  res.render("lists", { user, wishlist });
+  // res.send({ user, wishlist });
 }); 
+app.get("/editWishlist", async (req, res) => {
+  let userID = req.session.userID;
+
+  let sql = `SELECT 
+              u.userID,
+              u.username,
+              u.email,
+              w.wishlistID,
+              w.name
+              FROM \`user\` AS u
+              LEFT JOIN wishlist AS w
+              ON u.userID = w.userID
+              WHERE u.userID = ?`;
+  let sqlParams = [userID];
+  const [rows] = await conn.query(sql, sqlParams);
+
+  const user = rows.length
+  ? { userID: rows[0].userID, username: rows[0].username, email: rows[0].email }
+  : { };
+  // collect only the non-null wishlists
+  const wishlist = rows
+    .filter(r => r.wishlistID != null)
+    .map(r => ({ id: r.wishlistID, name: r.name }));
+
+  let sql2 = `SELECT 
+              wi.wishlistitemID,
+              wi.wishlistID,
+              wi.gameID,
+              g.
+              FROM wishlistitem AS wi
+              LEFT JOIN game AS g
+              ON wi.gameID = g.gameID
+              WHERE wi.wishlistID = ?`; // start again here to load all games in wishlist
+
+
+  // res.send(rows);
+  res.render();
+});
 
 app.get("/signup", (req, res) => { // signup route
   res.render("signup");
@@ -88,10 +161,23 @@ app.post("/signup", async (req, res) => { // signup post route
     let username = req.body.username;
     let password = req.body.password;
     let email = req.body.email;
+
+    // create new user in database
     let sql = `INSERT INTO user (username, password, email) VALUES (?, ?, ?)`;
     let sqlParams = [username, password, email];
     await conn.query(sql, sqlParams);
 
+    // get userID of new user
+    let sql2 = `SELECT user.userID FROM user WHERE user.username = ?`;
+    sqlParams = [username];
+    const [rows] = await conn.query(sql2, sqlParams);
+
+    // create new wishlist for user
+    let sql3 = `INSERT INTO wishlist (name, userID) VALUES (?, ?);`;
+    sqlParams = [`${username}'s WishList`, rows[0].userID];
+    await conn.query(sql3, sqlParams);
+
+    req.session.userID = rows[0].userID;
     res.redirect("/home"); // redirect to home after signup
   } catch (error) {
     console.error("Error during signup:", error.sqlMessage.slice(-15, -1));
