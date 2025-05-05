@@ -114,14 +114,14 @@ app.get("/lists", async (req, res) => { // lists route
   // res.send({ user, wishlist });
 }); 
 app.get("/editWishlist", async (req, res) => {
-  let userID = req.session.userID;
+  let userID = 2;
 
   let sql = `SELECT 
               u.userID,
               u.username,
               u.email,
               w.wishlistID,
-              w.name
+              w.name AS name
               FROM \`user\` AS u
               LEFT JOIN wishlist AS w
               ON u.userID = w.userID
@@ -141,15 +141,47 @@ app.get("/editWishlist", async (req, res) => {
               wi.wishlistitemID,
               wi.wishlistID,
               wi.gameID,
-              g.
+              g.steamID,
+              g.price,
+              g.name,
+              g.currency,
+              g.genre,
+              g.image,
+              g.description
               FROM wishlistitem AS wi
               LEFT JOIN game AS g
-              ON wi.gameID = g.gameID
+              ON wi.gameID = g.steamID
               WHERE wi.wishlistID = ?`; // start again here to load all games in wishlist
+  let sqlParams2 = [3];
+  const [rows2] = await conn.query(sql2, sqlParams2);
+  // const games = rows2.length
+  // ? { steamID: rows2.steamID, name: rows2.name, image: rows2.image, description: rows2.description, genre: rows2.genre, price: rows2.price, currency: rows2.currency }
+  // : { };
+  // // collect only the non-null wishlists
+  const games = rows2
+    .filter(r => r.steamID != null)
+    .map(r => ({ id: r.steamID, name: r.name, image: r.image, description: r.description, genre: r.genre, price: r.price, currency: r.currency }));
 
+  
+  // res.send(games);
+  res.render("viewList", { games });
+});
 
-  // res.send(rows);
-  res.render();
+app.get("/api/game", async (req, res) => {
+  showGames();
+  res.render("home");
+});
+app.get("/api/wishlist", async (req, res) => {
+  showWishlists();
+  res.render("home");
+});
+app.get("/api/wishlistitem", async (req, res) => {
+  showWishlistitems();
+  res.render("home");
+});
+app.get("/api/addGame", async (req, res) => {
+  addGameToWishlist();
+  res.render("home");
 });
 
 app.get("/signup", (req, res) => { // signup route
@@ -191,6 +223,28 @@ app.post("/signup", async (req, res) => { // signup post route
   }
 }); 
 
+
 app.listen(3000, () => {
   console.log("Express server running");
 });
+
+async function showGames(){
+  let sql = `SELECT * FROM game`;
+  const [rows] = await conn.query(sql);
+  console.log(rows);
+}
+async function showWishlists(){
+  let sql = `SELECT * FROM wishlist`;
+  const [rows] = await conn.query(sql);
+  console.log(rows);
+}
+async function showWishlistitems(){
+  let sql = `SELECT * FROM wishlistitem`;
+  const [rows] = await conn.query(sql);
+  console.log(rows);
+}
+
+async function addGameToWishlist() {
+  let sql = `INSERT INTO wishlistitem (wishlistID, gameID) VALUES (3, 2186350)`;
+  await conn.query(sql);
+}
