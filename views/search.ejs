@@ -1,53 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authors</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Item Lookup</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
-    <%- include('partials/nav') %>
+  <%- include('partials/nav') %>
 
-    <h1 class="mb-4" style="text-align: center;">Item Look up</h1>
+  <h1 class="mb-4 text-center">Item Lookup</h1>
 
 
-    <div style="display: flex; justify-content: center; margin-top: 20px;">
-        <div class="input-group" style="width: 600px;">
-          <div class="form-outline" data-mdb-input-init style="flex: 1;">
-            <input type="search" id="form1" class="form-control" placeholder="Type here..." />
+  <form action="/search" method="GET" style="display: flex; justify-content: center; margin-top: 20px;">
+    <div class="input-group" style="width: 600px;">
+      <input type="search" name="q" class="form-control" placeholder="Search game name..." />
+      <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+  </form>
+
+
+  <div class="container mt-4">
+    <% if (rows.length === 0) { %>
+      <p class="text-center">No games found.</p>
+    <% } %>
+
+    <% for (let game of rows) { %>
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card flex-row">
+            <img src="<%= game.image %>" class="card-img-left" style="width: 200px; object-fit: cover;" alt="<%= game.name %>">
+            <div class="card-body">
+              <h5 class="card-title"><%= game.name %></h5>
+              <p class="card-text">Steam ID: <%= game.steamID %></p>
+              <p class="card-text">Description: <%= game.description %></p>
+              <p class="card-text">Price: <%= game.price %></p>
+              <p class="card-text">Currency: <%= game.currency %></p>
+              <p class="card-text">Genre: <%= game.genre %></p>
+            </div>
           </div>
-          <button type="button" class="btn btn-primary" data-mdb-ripple-init>
-            <i class="fas fa-search" style="margin-right: 5px;"></i> Search
-          </button>
         </div>
       </div>
-      
-      
-      <div class="container mt-4">
-        <% for (let author of rows) { %>
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card flex-row">
-                        <img src="<%= author.pic %>" class="card-img-left" style="width: 200px; object-fit: cover;" alt="<%= author.firstName %> <%= author.lastName %>">
-                        <div class="card-body">
-                            <h5 class="card-title"><%= author.firstName %> <%= author.lastName %></h5>
-                            <p class="card-text">Profession: <%= author.prof %></p>
-                            <p class="card-text">Country: <%= author.country %></p>
-                            <a href="/editAuthor?authorId=<%= author.authorId %>" class="btn btn-warning">Update</a>
-                            <a href="/deleteAuthor?authorId=<%= author.authorId %>" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this author?')">Delete</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <% } %>
-    </div>
-    
+    <% } %>
+  </div>
 
-
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 </body>
 </html>

@@ -70,11 +70,28 @@ app.get("/", async (_, res) => {
     res.status(500).send("An error occurred while fetching app data.");
   }
 });
+
+
 //Search Route
 app.get("/search", async (req, res) => {
+  const query = req.query.q;
+  let sql = "SELECT * FROM game";
+  let sqlParams = [];
 
-  res.render("search")
-  });
+  if (query) {
+    sql += " WHERE name LIKE ?";
+    sqlParams.push(`%${query}%`);
+  }
+
+  try {
+    const [rows] = await conn.query(sql, sqlParams);
+    res.render("search", { rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Database error");
+  }
+});
+
 
 app.get("/api/getLists/:userId", async (req, res) => {
   let userId = req.params.userId;
