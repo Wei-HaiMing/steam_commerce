@@ -22,6 +22,11 @@
                             <p class="card-text">Genre: <%= game.genre %></p>
                             <p class="card-text">Price: <%= game.price %></p>
                             <img src="<%= game.image %>" alt="Game Image" class="img-fluid mb-2">
+                            <form method="POST" action="/removeGame">
+                                <input type="hidden" name="gameID" value="<%= game.id %>">
+                                <input type="hidden" name="username" value="<%= user.username %>">
+                                <button class="btn btn-danger">Remove from List</button>
+                            </form>
                         </div>
                     </div>
                 </div>

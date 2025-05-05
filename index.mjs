@@ -86,7 +86,7 @@ app.get("/home", (req, res) => { // home route
 });
 
 app.get("/lists", async (req, res) => { // lists route
-  let userID = 2;
+  let userID = req.session.userID;
   // let sql = `SELECT * FROM user LEFT JOIN ON userID = wishlist.userID LEFT JOIN ON wishlist.wishlistID WHERE userID = ?;`;
   let sql = `SELECT 
               u.userID,
@@ -114,7 +114,7 @@ app.get("/lists", async (req, res) => { // lists route
   // res.send({ user, wishlist });
 }); 
 app.get("/editWishlist", async (req, res) => {
-  let userID = 2;
+  let userID = req.session.userID;
 
   let sql = `SELECT 
               u.userID,
@@ -164,7 +164,17 @@ app.get("/editWishlist", async (req, res) => {
 
   
   // res.send(games);
-  res.render("viewList", { games });
+  res.render("viewList", { games, user, wishlist });
+});
+
+app.post("/removeGame", async (req, res) => {
+  console.log("remove Gameddafsd");
+  let gameID = req.body.gameID;
+  let sql = `DELETE FROM wishlistitem WHERE gameID = ?`;
+  let sqlParams = [gameID];
+  await conn.query(sql, sqlParams);
+
+  res.redirect("/editWishlist");
 });
 
 app.get("/api/game", async (req, res) => {
@@ -222,7 +232,39 @@ app.post("/signup", async (req, res) => { // signup post route
     }
   }
 }); 
+app.get("/login", (req, res) =>{
+  res.render("login"); // login route
+}); 
+app.post("/login", async (req, res) => { // login route
+  try{
+    let username = req.body.username;
+    let password = req.body.password;
+    let email = req.body.email;
 
+    // get userID of new user
+    let sql2 = `SELECT * FROM user WHERE user.username = ?`;
+    let sqlParams = [username];
+    const [rows] = await conn.query(sql2, sqlParams);
+
+    if(rows.length === 0) {
+      res.render("login", { error: "Username does not exist." });
+      return;
+    } else if(rows[0].password !== password) {
+      res.render("login", { error: "Password is incorrect." });
+      return;
+    }
+
+    req.session.userID = rows[0].userID;
+    res.redirect("/home"); // redirect to home after signup
+  } catch (error) {
+    console.error("Error during Login:", error);
+  }
+});
+
+app.get("/logout", (req, res) => { // logout route
+  req.session.destroy();
+  res.redirect("/login"); // redirect to home after logout
+});
 
 app.listen(3000, () => {
   console.log("Express server running");
