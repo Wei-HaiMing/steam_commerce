@@ -266,6 +266,38 @@ app.get("/logout", (req, res) => { // logout route
   res.redirect("/login"); // redirect to home after logout
 });
 
+
+
+//Search Route
+app.get("/search", async (req, res) => {
+  const query = req.query.q;
+  let sql = "SELECT * FROM game";
+  let sqlParams = [];
+
+  if (query) {
+    sql += " WHERE name LIKE ?";
+    sqlParams.push(`%${query}%`);
+  }
+
+  try {
+    const [rows] = await conn.query(sql, sqlParams);
+    res.render("search", { rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Database error");
+  }
+});
+
+
+app.get("/api/getLists/:userId", async (req, res) => {
+  let userId = req.params.userId;
+  let sql = `SELECT * FROM wishlist WHERE userId = ?`;
+  let sqlParams = [userId];
+  const[rows] = await conn.query(sql, sqlParams);
+  res.send(rows);
+});
+
+
 app.listen(3000, () => {
   console.log("Express server running");
 });
