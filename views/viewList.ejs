@@ -11,18 +11,22 @@
     <%- include('partials/nav') %>
 
     <div class="container mt-4">
-        <h1 class="mb-4">Quotes</h1>
+        <h1 class="mb-4">Inside List</h1>
 
         <div class="row">
-            <% for (let quote of rows) { %>
+            <% for (let game of games) { %>
                 <div class="col-md-4 mb-4">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">"<%= quote.quote %>"</h5>
-                            <p class="card-text">Category: <%= quote.category %></p>
-                            <p class="card-text">Likes: <%= quote.likes %></p>
-                            <a href="/editQuotes?quoteId=<%= quote.quoteId %>" class="btn btn-warning">Update</a>
-                            <a href="/deleteQuote?quoteId=<%= quote.quoteId %>" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this quote?')">Delete</a>
+                            <h5 class="card-title">"<%= game.name %>"</h5>
+                            <p class="card-text">Genre: <%= game.genre %></p>
+                            <p class="card-text">Price: <%= game.price %></p>
+                            <img src="<%= game.image %>" alt="Game Image" class="img-fluid mb-2">
+                            <form method="POST" action="/removeGame">
+                                <input type="hidden" name="gameID" value="<%= game.id %>">
+                                <input type="hidden" name="username" value="<%= user.username %>">
+                                <button class="btn btn-danger">Remove from List</button>
+                            </form>
                         </div>
                     </div>
                 </div>

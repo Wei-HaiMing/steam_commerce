@@ -3,6 +3,7 @@ import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
 import seedrandom from "seedrandom";
+import session from "express-session"
 
 const app = express();
 dotenv.config();
@@ -13,7 +14,16 @@ app.use(express.static("public"));
 //for Express to get values using POST method
 app.use(express.urlencoded({ extended: true }));
 
-//setting up database connection pool
+app.set("trust proxy", 1);
+app.use(
+  session({
+    secret: process.env.PROXY_SECRET,
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+
+// setting up database connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -70,11 +80,234 @@ app.get("/", async (_, res) => {
     res.status(500).send("An error occurred while fetching app data.");
   }
 });
+
+app.get("/home", (req, res) => { // home route
+  res.render("home");
+});
+
+app.get("/lists", async (req, res) => { // lists route
+  let userID = req.session.userID;
+  // let sql = `SELECT * FROM user LEFT JOIN ON userID = wishlist.userID LEFT JOIN ON wishlist.wishlistID WHERE userID = ?;`;
+  let sql = `SELECT 
+              u.userID,
+              u.username,
+              u.email,
+              w.wishlistID,
+              w.name AS name
+              FROM \`user\` AS u
+              LEFT JOIN wishlist AS w
+              ON u.userID = w.userID
+              WHERE u.userID = ?`;
+  let sqlParams = [userID];
+  const [rows] = await conn.query(sql, sqlParams);
+
+  const user = rows.length
+    ? { userID: rows[0].userID, username: rows[0].username, email: rows[0].email }
+    : { };
+
+  // collect only the non-null wishlists
+  const wishlist = rows
+    .filter(r => r.wishlistID != null)
+    .map(r => ({ id: r.wishlistID, name: r.name }));
+
+  res.render("lists", { user, wishlist });
+  // res.send({ user, wishlist });
+}); 
+app.get("/editWishlist", async (req, res) => {
+  let userID = req.session.userID;
+
+  let sql = `SELECT 
+              u.userID,
+              u.username,
+              u.email,
+              w.wishlistID,
+              w.name AS name
+              FROM \`user\` AS u
+              LEFT JOIN wishlist AS w
+              ON u.userID = w.userID
+              WHERE u.userID = ?`;
+  let sqlParams = [userID];
+  const [rows] = await conn.query(sql, sqlParams);
+
+  const user = rows.length
+  ? { userID: rows[0].userID, username: rows[0].username, email: rows[0].email }
+  : { };
+  // collect only the non-null wishlists
+  const wishlist = rows
+    .filter(r => r.wishlistID != null)
+    .map(r => ({ id: r.wishlistID, name: r.name }));
+
+  let sql2 = `SELECT 
+              wi.wishlistitemID,
+              wi.wishlistID,
+              wi.gameID,
+              g.steamID,
+              g.price,
+              g.name,
+              g.currency,
+              g.genre,
+              g.image,
+              g.description
+              FROM wishlistitem AS wi
+              LEFT JOIN game AS g
+              ON wi.gameID = g.steamID
+              WHERE wi.wishlistID = ?`; // start again here to load all games in wishlist
+  let sqlParams2 = [3];
+  const [rows2] = await conn.query(sql2, sqlParams2);
+  // const games = rows2.length
+  // ? { steamID: rows2.steamID, name: rows2.name, image: rows2.image, description: rows2.description, genre: rows2.genre, price: rows2.price, currency: rows2.currency }
+  // : { };
+  // // collect only the non-null wishlists
+  const games = rows2
+    .filter(r => r.steamID != null)
+    .map(r => ({ id: r.steamID, name: r.name, image: r.image, description: r.description, genre: r.genre, price: r.price, currency: r.currency }));
+
+  
+  // res.send(games);
+  res.render("viewList", { games, user, wishlist });
+});
+
+app.post("/removeGame", async (req, res) => {
+  console.log("remove Gameddafsd");
+  let gameID = req.body.gameID;
+  let sql = `DELETE FROM wishlistitem WHERE gameID = ?`;
+  let sqlParams = [gameID];
+  await conn.query(sql, sqlParams);
+
+  res.redirect("/editWishlist");
+});
+
+app.get("/api/game", async (req, res) => {
+  showGames();
+  res.render("home");
+});
+app.get("/api/wishlist", async (req, res) => {
+  showWishlists();
+  res.render("home");
+});
+app.get("/api/wishlistitem", async (req, res) => {
+  showWishlistitems();
+  res.render("home");
+});
+app.get("/api/addGame", async (req, res) => {
+  addGameToWishlist();
+  res.render("home");
+});
+
+app.get("/signup", (req, res) => { // signup route
+  res.render("signup");
+});
+
+app.post("/signup", async (req, res) => { // signup post route
+  try{
+    let username = req.body.username;
+    let password = req.body.password;
+    let email = req.body.email;
+
+    // create new user in database
+    let sql = `INSERT INTO user (username, password, email) VALUES (?, ?, ?)`;
+    let sqlParams = [username, password, email];
+    await conn.query(sql, sqlParams);
+
+    // get userID of new user
+    let sql2 = `SELECT user.userID FROM user WHERE user.username = ?`;
+    sqlParams = [username];
+    const [rows] = await conn.query(sql2, sqlParams);
+
+    // create new wishlist for user
+    let sql3 = `INSERT INTO wishlist (name, userID) VALUES (?, ?);`;
+    sqlParams = [`${username}'s WishList`, rows[0].userID];
+    await conn.query(sql3, sqlParams);
+
+    let sql4 = `SELECT wishlist.wishlistID FROM wishlist WHERE wishlist.userID = ?`;
+    sqlParams = [rows[0].userID];
+    const [rows2] = await conn.query(sql4, sqlParams);
+
+    req.session.wishlistID = rows2[0].wishlistID; // store wishlistID in session
+    req.session.userID = rows[0].userID;
+    res.redirect("/home"); // redirect to home after signup
+  } catch (error) {
+    console.error("Error during signup:", error.sqlMessage.slice(-15, -1));
+    if(error.sqlMessage.slice(-15, -1).includes("user.username")) {
+      res.render("signup", { error: "Username already exists. Please choose another one." });
+    } else if(error.sqlMessage.slice(-15, -1).includes("user.email")) {
+      res.render("signup", { error: "Email already exists. Please choose another one." });
+    } else {
+      res.status(500).send("An error occurred during signup.");
+    }
+  }
+}); 
+app.get("/login", (req, res) =>{
+  res.render("login"); // login route
+}); 
+app.post("/login", async (req, res) => { // login route
+  try{
+    let username = req.body.username;
+    let password = req.body.password;
+    let email = req.body.email;
+
+    // get userID of new user
+    let sql2 = `SELECT * FROM user WHERE user.username = ?`;
+    let sqlParams = [username];
+    const [rows] = await conn.query(sql2, sqlParams);
+
+    if(rows.length === 0) {
+      res.render("login", { error: "Username does not exist." });
+      return;
+    } else if(rows[0].password !== password) {
+      res.render("login", { error: "Password is incorrect." });
+      return;
+    }
+
+    let sql4 = `SELECT wishlist.wishlistID FROM wishlist WHERE wishlist.userID = ?`;
+    sqlParams = [rows[0].userID];
+    const [rows2] = await conn.query(sql4, sqlParams);
+
+    req.session.wishlistID = rows2[0].wishlistID; // store wishlistID in session
+    req.session.userID = rows[0].userID;
+    res.redirect("/home"); // redirect to home after signup
+  } catch (error) {
+    console.error("Error during Login:", error);
+  }
+});
+
+app.get("/logout", (req, res) => { // logout route
+  req.session.destroy();
+  res.redirect("/login"); // redirect to home after logout
+});
+
+// app.get("/searchForGame", (req, res) => { // search for game route
+//   res.render("search");
+// });
+
 //Search Route
 app.get("/search", async (req, res) => {
+  const query = req.query.q;
+  let sql = "SELECT * FROM game";
+  let sqlParams = [];
 
-  res.render("search")
-  });
+  if (query) {
+    sql += " WHERE name LIKE ?";
+    sqlParams.push(`%${query}%`);
+  }
+
+  try {
+    const [rows] = await conn.query(sql, sqlParams);
+    res.render("search", { rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Database error");
+  }
+});
+
+app.post("/addToWishlist", async (req, res) => {
+  let steamID = req.body.steamID;
+
+  let sql = `INSERT INTO wishlistitem (wishlistID, gameID) VALUES (?, ?)`;
+  let sqlParams = [req.session.wishlistID, steamID];
+  await conn.query(sql, sqlParams);
+  res.redirect("/search"); // redirect to search page after adding game to wishlist
+});
 
 app.get("/api/getLists/:userId", async (req, res) => {
   let userId = req.params.userId;
@@ -85,7 +318,27 @@ app.get("/api/getLists/:userId", async (req, res) => {
 });
 
 
-
 app.listen(3000, () => {
   console.log("Express server running");
 });
+
+async function showGames(){
+  let sql = `SELECT * FROM game`;
+  const [rows] = await conn.query(sql);
+  console.log(rows);
+}
+async function showWishlists(){
+  let sql = `SELECT * FROM wishlist`;
+  const [rows] = await conn.query(sql);
+  console.log(rows);
+}
+async function showWishlistitems(){
+  let sql = `SELECT * FROM wishlistitem`;
+  const [rows] = await conn.query(sql);
+  console.log(rows);
+}
+
+async function addGameToWishlist() {
+  let sql = `INSERT INTO wishlistitem (wishlistID, gameID) VALUES (3, 2186350)`;
+  await conn.query(sql);
+}
