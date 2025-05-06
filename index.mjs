@@ -219,6 +219,11 @@ app.post("/signup", async (req, res) => { // signup post route
     sqlParams = [`${username}'s WishList`, rows[0].userID];
     await conn.query(sql3, sqlParams);
 
+    let sql4 = `SELECT wishlist.wishlistID FROM wishlist WHERE wishlist.userID = ?`;
+    sqlParams = [rows[0].userID];
+    const [rows2] = await conn.query(sql4, sqlParams);
+
+    req.session.wishlistID = rows2[0].wishlistID; // store wishlistID in session
     req.session.userID = rows[0].userID;
     res.redirect("/home"); // redirect to home after signup
   } catch (error) {
@@ -254,6 +259,11 @@ app.post("/login", async (req, res) => { // login route
       return;
     }
 
+    let sql4 = `SELECT wishlist.wishlistID FROM wishlist WHERE wishlist.userID = ?`;
+    sqlParams = [rows[0].userID];
+    const [rows2] = await conn.query(sql4, sqlParams);
+
+    req.session.wishlistID = rows2[0].wishlistID; // store wishlistID in session
     req.session.userID = rows[0].userID;
     res.redirect("/home"); // redirect to home after signup
   } catch (error) {
@@ -266,7 +276,9 @@ app.get("/logout", (req, res) => { // logout route
   res.redirect("/login"); // redirect to home after logout
 });
 
-
+// app.get("/searchForGame", (req, res) => { // search for game route
+//   res.render("search");
+// });
 
 //Search Route
 app.get("/search", async (req, res) => {
@@ -288,6 +300,14 @@ app.get("/search", async (req, res) => {
   }
 });
 
+app.post("/addToWishlist", async (req, res) => {
+  let steamID = req.body.steamID;
+
+  let sql = `INSERT INTO wishlistitem (wishlistID, gameID) VALUES (?, ?)`;
+  let sqlParams = [req.session.wishlistID, steamID];
+  await conn.query(sql, sqlParams);
+  res.redirect("/search"); // redirect to search page after adding game to wishlist
+});
 
 app.get("/api/getLists/:userId", async (req, res) => {
   let userId = req.params.userId;

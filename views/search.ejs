@@ -37,6 +37,10 @@
               <p class="card-text">Price: <%= game.price %></p>
               <p class="card-text">Currency: <%= game.currency %></p>
               <p class="card-text">Genre: <%= game.genre %></p>
+              <form action="/addToWishlist" method="POST">
+                <input type="hidden" name="steamID" value="<%= game.steamID %>">
+                <button>Add To Wishlist</button>
+              </form>
             </div>
           </div>
         </div>
