@@ -9,19 +9,19 @@
             data-bs-slide-to="0"
             class="active"
             aria-current="true"
-            aria-label="Slide 1"
+            aria-label="<%= game1.name %>"
           ></button>
           <button
             type="button"
             data-bs-target="#myCarousel"
             data-bs-slide-to="1"
-            aria-label="Slide 2"
+            aria-label="<%= game2.name %>"
           ></button>
           <button
             type="button"
             data-bs-target="#myCarousel"
             data-bs-slide-to="2"
-            aria-label="Slide 3"
+            aria-label="<%= game3.name %>"
           ></button>
         </div>
       
@@ -29,35 +29,35 @@
         <div class="carousel-inner">
           <div class="carousel-item active">
             <img
-              src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1229490/capsule_616x353.jpg?t=1740623813"
+              src="<%= game1.image %>"
               class="d-block w-100"
               alt="First slide"
             />
             <div class="carousel-caption d-none d-md-block">
-              <h5>First Slide Title</h5>
-              <p>Price</p>
+              <h5><%= game1.name %></h5>
+              <p><%= game1.price %></p>
             </div>
           </div>
           <div class="carousel-item">
             <img
-              src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1229490/capsule_616x353.jpg?t=1740623813"
+              src="<%= game2.image %>"
               class="d-block w-100"
               alt="Second slide"
             />
             <div class="carousel-caption d-none d-md-block">
-              <h5>Second Slide Title</h5>
-              <p>Price</p>
+              <h5><%= game2.name %></h5>
+              <p><%= game2.price %></p>
             </div>
           </div>
           <div class="carousel-item">
             <img
-              src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1229490/capsule_616x353.jpg?t=1740623813"
+              src="<%= game3.image %>"
               class="d-block w-100"
               alt="Third slide"
             />
             <div class="carousel-caption d-none d-md-block">
-              <h5>Third Slide Title</h5>
-              <p>Price</p>
+              <h5><%= game3.name %></h5>
+              <p><%= game3.price %></p>
             </div>
           </div>
         </div>

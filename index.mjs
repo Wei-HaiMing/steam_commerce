@@ -81,11 +81,18 @@ app.get("/", async (_, res) => {
   }
 });
 
-app.get("/home", (req, res) => { // home route
-  res.render("home");
+app.get("/home", isAuthenticated, async (req, res) => { // home route
+  let randomNumbers = [Math.floor(Math.random() * (50 - 2 + 1) + 2), Math.floor(Math.random() * (50 - 2 + 1) + 2), Math.floor(Math.random() * (50 - 2 + 1) + 2)];
+  let sql = `SELECT * FROM game`;
+  const [rows]  = await conn.query(sql);
+  let game1 = rows[randomNumbers[0]];
+  let game2 = rows[randomNumbers[1]];
+  let game3 = rows[randomNumbers[2]];
+  // res.send({game1, game2, game3});
+  res.render("home", {game1, game2, game3});
 });
 
-app.get("/lists", async (req, res) => { // lists route
+app.get("/lists", isAuthenticated, async (req, res) => { // lists route
   let userID = req.session.userID;
   // let sql = `SELECT * FROM user LEFT JOIN ON userID = wishlist.userID LEFT JOIN ON wishlist.wishlistID WHERE userID = ?;`;
   let sql = `SELECT 
@@ -152,7 +159,7 @@ app.get("/editWishlist", async (req, res) => {
               LEFT JOIN game AS g
               ON wi.gameID = g.steamID
               WHERE wi.wishlistID = ?`; // start again here to load all games in wishlist
-  let sqlParams2 = [3];
+  let sqlParams2 = [req.session.wishlistID];
   const [rows2] = await conn.query(sql2, sqlParams2);
   // const games = rows2.length
   // ? { steamID: rows2.steamID, name: rows2.name, image: rows2.image, description: rows2.description, genre: rows2.genre, price: rows2.price, currency: rows2.currency }
@@ -162,12 +169,12 @@ app.get("/editWishlist", async (req, res) => {
     .filter(r => r.steamID != null)
     .map(r => ({ id: r.steamID, name: r.name, image: r.image, description: r.description, genre: r.genre, price: r.price, currency: r.currency }));
 
-  
-  // res.send(games);
+  // const values = [req.session.wishlistID, req.session.userID];
+  // res.send({games, user, wishlist, values});
   res.render("viewList", { games, user, wishlist });
 });
 
-app.post("/removeGame", async (req, res) => {
+app.post("/removeGame", isAuthenticated, async (req, res) => {
   console.log("remove Gameddafsd");
   let gameID = req.body.gameID;
   let sql = `DELETE FROM wishlistitem WHERE gameID = ?`;
@@ -223,6 +230,7 @@ app.post("/signup", async (req, res) => { // signup post route
     sqlParams = [rows[0].userID];
     const [rows2] = await conn.query(sql4, sqlParams);
 
+    req.session.authenticated = true; // set session variable to true
     req.session.wishlistID = rows2[0].wishlistID; // store wishlistID in session
     req.session.userID = rows[0].userID;
     res.redirect("/home"); // redirect to home after signup
@@ -262,7 +270,8 @@ app.post("/login", async (req, res) => { // login route
     let sql4 = `SELECT wishlist.wishlistID FROM wishlist WHERE wishlist.userID = ?`;
     sqlParams = [rows[0].userID];
     const [rows2] = await conn.query(sql4, sqlParams);
-
+    console.log("rows2", rows2);
+    req.session.authenticated = true;
     req.session.wishlistID = rows2[0].wishlistID; // store wishlistID in session
     req.session.userID = rows[0].userID;
     res.redirect("/home"); // redirect to home after signup
@@ -281,7 +290,7 @@ app.get("/logout", (req, res) => { // logout route
 // });
 
 //Search Route
-app.get("/search", async (req, res) => {
+app.get("/search", isAuthenticated, async (req, res) => {
   const query = req.query.q;
   let sql = "SELECT * FROM game";
   let sqlParams = [];
@@ -300,9 +309,10 @@ app.get("/search", async (req, res) => {
   }
 });
 
-app.post("/addToWishlist", async (req, res) => {
+app.post("/addToWishlist", isAuthenticated, async (req, res) => {
   let steamID = req.body.steamID;
 
+  console.log("wishlistID", req.session.wishlistID);
   let sql = `INSERT INTO wishlistitem (wishlistID, gameID) VALUES (?, ?)`;
   let sqlParams = [req.session.wishlistID, steamID];
   await conn.query(sql, sqlParams);
@@ -341,4 +351,12 @@ async function showWishlistitems(){
 async function addGameToWishlist() {
   let sql = `INSERT INTO wishlistitem (wishlistID, gameID) VALUES (3, 2186350)`;
   await conn.query(sql);
+}
+
+function isAuthenticated(req, res, next) {
+  if (req.session.authenticated) {
+    return next();
+  } else {
+    res.redirect("/login");
+  }
 }
