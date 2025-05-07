@@ -10,10 +10,12 @@
 
 </head>
 <body>
+    <%- include('partials/nav.ejs') %>
+
     <div class="container d-flex justify-content-center align-items-center vh-100">
         <div class="card" style="width: 100%; max-width: 400px;">
             <div class="card-body">
-                <h5 class="card-title text-center mb-4">Sign Up</h5>
+                <h5 class="card-title text-center mb-4">Update User</h5>
 
                 <% if (typeof(error) !== "undefined") { %>
                     <div class="alert alert-danger" role="alert">
@@ -21,35 +23,30 @@
                     </div>
                 <% } %>
 
-                <form action="/signup" method="POST">
+                <form action="/updateUser" method="POST">
                     <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" id="username" name="username" class="form-control" required>
+                        <label for="username" class="form-label" >Username</label>
+                        <input type="text" id="username" name="username" class="form-control"  value = "<%= rows.username%>" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="text" id="email" name="email" class="form-control" required>
+                        <input type="text" id="email" name="email" class="form-control" value = "<%= rows.email%>" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="age" class="form-label">Age</label>
-                        <input type="number" id="age" name="age" class="form-control" required>
+                        <input type="number" id="age" name="age" class="form-control" value = "<%= rows.age%>" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="dod" class="form-label">Date of Birth</label>
-                        <input type="date" id="dob" name="dob" class="form-control" required>
+                        <input type="date" id="dob" name="dob" class="form-control" value = "<%=rows.dob.toISOString().slice(0,10)%>" required>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" id="password" name="password" class="form-control" required>
-                    </div>
 
-                    <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+                    <button type="submit" class="btn btn-primary w-100">Update</button>
                 </form>
-                <a class="text-center" href="/login">Already have an account? Login</a>
             </div>
         </div>
     </div>
