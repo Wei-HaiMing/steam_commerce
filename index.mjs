@@ -35,7 +35,7 @@ const pool = mysql.createPool({
 const conn = await pool.getConnection();
 
 //routes
-app.get("/", async (_, res) => {
+app.get("/", isAuthenticated, async (_, res) => {
   try {
     const response = await fetch(
       `https://api.steampowered.com/ISteamApps/GetAppList/v1?key=${process.env.STEAM_API_KEY}`
@@ -327,6 +327,9 @@ app.get("/api/getLists/:userId", async (req, res) => {
   res.send(rows);
 });
 
+app.get("/api/getUsers", async (req, res) => {
+  getUsers();
+});
 
 app.listen(3000, () => {
   console.log("Express server running");
@@ -351,6 +354,12 @@ async function showWishlistitems(){
 async function addGameToWishlist() {
   let sql = `INSERT INTO wishlistitem (wishlistID, gameID) VALUES (3, 2186350)`;
   await conn.query(sql);
+}
+
+async function getUsers(){
+  let sql = `SELECT * FROM user`;
+  const [rows] = await conn.query(sql);
+  console.log(rows);
 }
 
 function isAuthenticated(req, res, next) {
