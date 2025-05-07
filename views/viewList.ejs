@@ -1,54 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quotes</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-
-</head>
-<body>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
     <%- include('partials/nav') %>
 
     <div class="container mt-4">
-        <h1 class="mb-4">Inside List</h1>
+      <h1 class="mb-4">Inside List</h1>
 
-        <div class="row">
-            <% if(games.length != 0) { %>
-                <% for (let game of games) { %>
-                    <div class="col-md-4 mb-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">"<%= game.name %>"</h5>
-                                <p class="card-text">Genre: <%= game.genre %></p>
-                                <p class="card-text">Price: <%= game.price %></p>
-                                <img src="<%= game.image %>" alt="Game Image" class="img-fluid mb-2">
-                                <form method="POST" action="/removeGame">
-                                    <input type="hidden" name="gameID" value="<%= game.id %>">
-                                    <input type="hidden" name="username" value="<%= user.username %>">
-                                    <button class="btn btn-danger">Remove from List</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                <% } %>
-            <% } else { %>
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">No Games In List</h5>
-                            <a class="btn-danger" href="/search">Search for A Game</a>
-                        </div>
-                    </div>
-                </div>
-           <% } %>
+      <div class="row">
+        <% if(games.length != 0) { %> <% for (let game of games) { %>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">"<%= game.name %>"</h5>
+              <p class="card-text">Genre: <%= game.genre %></p>
+              <p class="card-text">Price: <%= game.price %></p>
+              <img
+                src="<%= game.image %>"
+                alt="Game Image"
+                class="img-fluid mb-2"
+              />
+              <form method="POST" action="/removeGame">
+                <input type="hidden" name="gameID" value="<%= game.id %>" />
+                <input
+                  type="hidden"
+                  name="username"
+                  value="<%= user.username %>"
+                />
+                <button class="btn btn-danger">Remove from List</button>
+              </form>
+            </div>
+          </div>
         </div>
+        <% } %> <% } else { %>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">No Games In List</h5>
+              <a class="btn-danger" href="/search">Search for A Game</a>
+            </div>
+          </div>
+        </div>
+        <% } %>
+      </div>
     </div>
 
- 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
-</body>
+  </body>
 </html>
