@@ -210,10 +210,11 @@ app.post("/signup", async (req, res) => { // signup post route
     let username = req.body.username;
     let password = req.body.password;
     let email = req.body.email;
-
+    let age = req.body.age;
+    let dob = req.body.dob;
     // create new user in database
-    let sql = `INSERT INTO user (username, password, email) VALUES (?, ?, ?)`;
-    let sqlParams = [username, password, email];
+    let sql = `INSERT INTO user (username, password, email,age, dob) VALUES (?, ?, ?, ?, ?)`;
+    let sqlParams = [username, password, email, age, dob];
     await conn.query(sql, sqlParams);
 
     // get userID of new user
@@ -329,6 +330,33 @@ app.get("/api/getLists/:userId", async (req, res) => {
 
 app.get("/api/getUsers", async (req, res) => {
   getUsers();
+});
+
+app.get("/updateUser", isAuthenticated, async (req, res) => {
+  let userID = req.session.userID;
+  let sql = `SELECT * FROM user WHERE userID = ?`;
+  let sqlParams = [userID];
+  const [rows] = await conn.query(sql, sqlParams);
+  console.log(rows[0]);
+  res.render("updateUser",{rows : rows[0]});
+});
+
+app.post("/updateUser",isAuthenticated, async (req, res) => {
+
+  let userID = req.session.userID;
+  let username = req.body.username;
+  let email = req.body.email;
+  let age = req.body.age;
+  let dob = req.body.dob;
+  let sql = "UPDATE user SET username = ?, email = ?, age = ?, dob = ? WHERE userID = ?";
+  try {
+    await conn.query(sql, [username, email, age, dob, userID]);
+  }
+  catch (error) {
+    res.render("updateUser", { error: "Error updating user information." });
+    return;
+  }
+  res.redirect("updateUser");
 });
 
 app.listen(3000, () => {
